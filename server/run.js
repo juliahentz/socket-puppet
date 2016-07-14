@@ -18,4 +18,14 @@ io.on('connection', (socket)=>{
 
     console.log('User connected');
 
+    socket.emit('message', {hello:"from the server"});
+
+    socket.on('message', function(msg){
+        console.log(`message: ${msg}`);
+    });
+
+    /*socket.on('disconnect', function(){
+        console.log('User disconnected');
+    });*/
+
 });
