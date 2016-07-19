@@ -1,64 +1,49 @@
+/*
 var socket = io();
 
-var ax = null;
+var deviceOrientationMessage = null;
+var deviceOrientationChange = false;
+
+window.addEventListener("deviceorientation", function(event) {
+    // process event.alpha, event.beta and event.gamma
+
+    deviceOrientationMessage = `Alpha: ${event.alpha},
+            Beta: ${event.beta},
+            Gamma: ${event.gamma}`;
+
+
+    document.write("Hello world: " + deviceOrientationMessage);
+}, true);
+
 
 socket.on('connect', function(){
 
-    socket.on('message', function(data){
-        console.log(data);
-    });
+    console.log("socket connection is on");
 
-    socket.emit('message', xPosition);
+    var promise = new Promise (function(resolve, reject) {
+
+
+        console.log(`listening to device orientation change: ${deviceOrientationChange}`);
+        resolve();
+
+    })
+    .then(function(){
+
+        console.log('promise is happening');
+
+        //writeValue();
+
+        socket.emit('message', deviceOrientationMessage);
+
+        socket.on('message', function(data){
+            console.log(data);
+        });
+    })
+    .catch(function(onReject){
+        console.log(onReject);
+    });
 
 });
 
-var x = [0,0],
-    y = [0,0],
-    segLength = 50;
 
-function setup() {
-    createCanvas(710, 400);
-    strokeWeight(20.0);
-    stroke(255, 100);
-}
-
-function draw() {
-    background(0);
-    dragSegment(0, xPosition, yPosition);
-    dragSegment(1, x[0], y[0]);
-}
-
-function dragSegment(i, xin, yin) {
-    var dx = xin - x[i];
-    var dy = yin - y[i];
-    var angle = atan2(dy, dx);
-    x[i] = xin - cos(angle) * segLength;
-    y[i] = yin - sin(angle) * segLength;
-    segment(x[i], y[i], angle);
-}
-
-function segment(x, y, a) {
-    push();
-    translate(x, y);
-    rotate(a);
-    line(0, 0, segLength, 0);
-    pop();
-}
-
-if (window.DeviceMotionEvent == undefined) {
-    //No accelerometer is present. Use buttons.
-    console.log("no accelerometer");
-}
-else {
-    window.addEventListener("devicemotion", accelerometerUpdate, true);
-}
-
-function accelerometerUpdate(e) {
-    var aX = event.accelerationIncludingGravity.x*1;
-    var aY = event.accelerationIncludingGravity.y*1;
-    var aZ = event.accelerationIncludingGravity.z*1;
-    //The following two lines are just to calculate a
-    // tilt. Not really needed.
-    xPosition = Math.atan2(aY, aZ);
-    yPosition = Math.atan2(aX, aZ);
-}
+*/

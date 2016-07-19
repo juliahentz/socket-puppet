@@ -6,7 +6,9 @@ const io        = require('socket.io')(server);
 
 const PORT      = 3033;
 
-app.use('/', express.static('../app'));
+app.use('/', express.static('../dev-app'));
+
+app.use('/test', express.static('../app'));
 
 server.listen(PORT, ()=>{
 
@@ -18,7 +20,7 @@ io.on('connection', (socket)=>{
 
     console.log('User connected');
 
-    socket.emit('message', {hello:"from the server"});
+    socket.emit('message', 'hello from the server');
 
     socket.on('message', function(msg){
         console.log(`message: ${msg}`);
