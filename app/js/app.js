@@ -1,49 +1,37 @@
-/*
 var socket = io();
-
-var deviceOrientationMessage = null;
-var deviceOrientationChange = false;
-
-window.addEventListener("deviceorientation", function(event) {
-    // process event.alpha, event.beta and event.gamma
-
-    deviceOrientationMessage = `Alpha: ${event.alpha},
-            Beta: ${event.beta},
-            Gamma: ${event.gamma}`;
-
-
-    document.write("Hello world: " + deviceOrientationMessage);
-}, true);
-
 
 socket.on('connect', function(){
 
     console.log("socket connection is on");
 
-    var promise = new Promise (function(resolve, reject) {
+    deviceOrientationListener();
 
-
-        console.log(`listening to device orientation change: ${deviceOrientationChange}`);
-        resolve();
-
-    })
-    .then(function(){
-
-        console.log('promise is happening');
-
-        //writeValue();
-
-        socket.emit('message', deviceOrientationMessage);
-
-        socket.on('message', function(data){
-            console.log(data);
-        });
-    })
-    .catch(function(onReject){
-        console.log(onReject);
-    });
+    /*socket.on('message', function(data){
+        console.log(data);
+    });*/
 
 });
 
+deviceOrientationListener = function(){
 
-*/
+    window.addEventListener("deviceorientation", function(event) {
+        // event.alpha - left-to-right movement
+        // event.beta - front-to-back movement
+        // event.gamma - compass degree
+
+        var tiltLR = Math.round(event.alpha);
+        var tiltFB = Math.round(event.beta);
+        var compDEG = Math.round(event.gamma);
+
+        deviceOrientationMessage = `Alpha: ${tiltLR},
+            Beta: ${tiltFB},
+            Gamma: ${compDEG}`;
+
+        document.getElementById("data-export").innerHTML = "Data export: " + deviceOrientationMessage;
+
+        socket.emit('message', deviceOrientationMessage);
+        
+    }, true);
+
+};
+

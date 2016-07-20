@@ -6,9 +6,7 @@ const io        = require('socket.io')(server);
 
 const PORT      = 3033;
 
-app.use('/', express.static('../dev-app'));
-
-app.use('/test', express.static('../app'));
+app.use('/', express.static('../app'));
 
 server.listen(PORT, ()=>{
 
@@ -22,9 +20,9 @@ io.on('connection', (socket)=>{
 
     socket.emit('message', 'hello from the server');
 
-    socket.on('message', function(msg){
+    /*socket.on('message', function(msg){
         console.log(`message: ${msg}`);
-    });
+    });*/
 
     /*socket.on('disconnect', function(){
         console.log('User disconnected');
