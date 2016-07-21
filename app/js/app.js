@@ -39,25 +39,24 @@ function preload() {
             onUpdate(data);
         });
     });
+
+    // Function is listening for device orientation changes
+    // todo: make it conditional to mobile devices, solve authentication
+    deviceOrientationListener = function(){
+
+        window.addEventListener("deviceorientation", function(event) {
+
+            // event.alpha is the left-to-right motion of the device, it is an angle between 0-360
+            var current = Math.round(event.alpha);
+            // "setTimeout" workaround in Phaser
+            // the counter is increased by one in each 10 milliseconds
+            // when the counter reaches a number that is divisible by 40, it emits the current angle to the server
+            if(counter % 40 === 0) {
+                socket.emit('message', current);
+            }
+        }, true);
+    };
 }
-
-// Function is listening for device orientation changes
-// todo: make it conditional to mobile devices, solve authentication
-deviceOrientationListener = function(){
-
-    window.addEventListener("deviceorientation", function(event) {
-
-        // event.alpha is the left-to-right motion of the device, it is an angle between 0-360
-        var current = Math.round(event.alpha);
-        // "setTimeout" workaround in Phaser
-        // the counter is increased by one in each 10 milliseconds
-        // when the counter reaches a number that is divisible by 40, it emits the current angle to the server
-        if(counter % 40 === 0) {
-            socket.emit('message', current);
-        }
-    }, true);
-};
-
 
 function create() {
 
