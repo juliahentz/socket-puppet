@@ -68,10 +68,6 @@ socket.on('connect', function(){
     // listening to message coming from server, message has been sent from the update function
     socket.on('message', function(data){
 
-        // printing out angle data in browser
-        // todo: delete line after testing
-        document.getElementById("data-export").innerHTML = "Data export: " + data;
-
         // calling a function within Phaser's update function in order to pass in the angle sent from the server
         onUpdate(data);
     });
@@ -97,6 +93,9 @@ deviceOrientationListener = function(){
 
 function preload() {
 
+    game.load.image('cityline1', '../assets/cityline1.png');
+    game.load.image('cityline2', '../assets/cityline2.png');
+    game.load.image('cityline3', '../assets/cityline3.png');
 
 }
 
@@ -115,6 +114,16 @@ function create() {
     //  Calling a TimerEvent, that sets off in each 10 millisecond in order to count relatively close to the frame rate
     timer.loop(1, updateCounter, this);
     timer.start();
+
+    var cityline1 = game.add.tileSprite(-500, -5, 5000, 308*0.7, 'cityline1');
+    var cityline2 = game.add.tileSprite(-400, -5, 3500, 348*0.7, 'cityline2');
+    var cityline3 = game.add.tileSprite(-300, -5, 2400, 410*0.7, 'cityline3');
+    cityline2.alpha = 0.7;
+    cityline3.alpha = 0.4;
+    cityline1.scale.setTo(0.7,0.7);
+    cityline2.scale.setTo(0.7,0.7);
+    cityline3.scale.setTo(0.7,0.7);
+
 
     // Creating two objects that are controlled by the moving joints
     /**
@@ -276,6 +285,9 @@ function create() {
     leftLegLine2.setTo(body9.x, body9.y, body11.x, body11.y);
     rightLegLine2.setTo(body10.x, body10.y, body12.x, body12.y);
 
+    game.physics.enable(cityline1, Phaser.Physics.ARCADE);
+    game.physics.enable(cityline2, Phaser.Physics.ARCADE);
+    game.physics.enable(cityline3, Phaser.Physics.ARCADE);
 
     // called in preload function, after a message from the server has been received, accepts data sent from server
     onUpdate = function(tiltLR){
@@ -306,9 +318,16 @@ function create() {
         if(joint.body.y > joint2.body.y){
             game.add.tween(joint.body).to( { y: 100+distance, x: joint.body.x-70 }, 2000, "Linear", true);
             game.add.tween(joint2.body).to( { y: 100-distance, x: joint2.body.x-70 }, 2000, "Linear", true);
+
+            cityline1.body.velocity.x=70;
+            cityline2.body.velocity.x=30;
+            cityline3.body.velocity.x=10;
         } else if (joint.body.y < joint2.body.y) {
             game.add.tween(joint.body).to( { y: 100+distance, x: joint.body.x+70 }, 2000, "Linear", true);
             game.add.tween(joint2.body).to( { y: 100-distance, x: joint2.body.x+70 }, 2000, "Linear", true);
+            cityline1.body.velocity.x=-70;
+            cityline2.body.velocity.x=-30;
+            cityline3.body.velocity.x=-10;
         } else {
             game.add.tween(joint.body).to( { y: 100+distance }, 2000, "Linear", true);
             game.add.tween(joint2.body).to( { y: 100-distance }, 2000, "Linear", true);
