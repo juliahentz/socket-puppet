@@ -18,44 +18,48 @@ var counter = 0;
 var a = null;
 var b = null;
 
+
+var socket = io();
+// establishing socket connection to the server
+socket.on('connect', function(){
+
+    // calling an eventListener on possible mobile devices
+    // todo: authentication + set up different rout for mobile user for control
+    deviceOrientationListener();
+
+    // listening to message coming from server, message has been sent from the update function
+    socket.on('message', function(data){
+
+        // printing out angle data in browser
+        // todo: delete line after testing
+        document.getElementById("data-export").innerHTML = "Data export: " + data;
+
+        // calling a function within Phaser's update function in order to pass in the angle sent from the server
+        onUpdate(data);
+    });
+});
+
+// Function is listening for device orientation changes
+// todo: make it conditional to mobile devices, solve authentication
+deviceOrientationListener = function(){
+
+    window.addEventListener("deviceorientation", function(event) {
+
+        // event.alpha is the left-to-right motion of the device, it is an angle between 180 and -180
+        var current = Math.round((event.alpha));
+
+        // "setTimeout" workaround in Phaser
+        // the counter is increased by one in each 10 milliseconds
+        // when the counter reaches a number that is divisible by 40, it emits the current angle to the server
+        if(counter % 16 === 0) {
+            socket.emit('message', current);
+        }
+    }, false);
+};
+
 function preload() {
 
-    var socket = io();
-    // establishing socket connection to the server
-    socket.on('connect', function(){
 
-        // calling an eventListener on possible mobile devices
-        // todo: authentication + set up different rout for mobile user for control
-        deviceOrientationListener();
-
-        // listening to message coming from server, message has been sent from the update function
-        socket.on('message', function(data){
-
-            // printing out angle data in browser
-            // todo: delete line after testing
-            document.getElementById("data-export").innerHTML = "Data export: " + data;
-
-            // calling a function within Phaser's update function in order to pass in the angle sent from the server
-            onUpdate(data);
-        });
-    });
-
-    // Function is listening for device orientation changes
-    // todo: make it conditional to mobile devices, solve authentication
-    deviceOrientationListener = function(){
-
-        window.addEventListener("deviceorientation", function(event) {
-
-            // event.alpha is the left-to-right motion of the device, it is an angle between 0-360
-            var current = Math.round(event.alpha);
-            // "setTimeout" workaround in Phaser
-            // the counter is increased by one in each 10 milliseconds
-            // when the counter reaches a number that is divisible by 40, it emits the current angle to the server
-            if(counter % 40 === 0) {
-                socket.emit('message', current);
-            }
-        }, true);
-    };
 }
 
 function create() {
@@ -71,7 +75,7 @@ function create() {
     timer = game.time.create(false);
 
     //  Calling a TimerEvent, that sets off in each 10 millisecond in order to count relatively close to the frame rate
-    timer.loop(10, updateCounter, this);
+    timer.loop(1, updateCounter, this);
     timer.start();
 
     //  Creating two objects that are controlled by the moving joints
@@ -105,9 +109,6 @@ function create() {
 
     mouseSpring2 = game.physics.p2.createSpring(joint2, body2, 200, 5, 2);
     line2.setTo(body2.x, body2.y, joint2.x, joint2.y);
-}
-
-function update() {
 
     // called in preload function, after a message from the server has been received, accepts data sent from server
     onUpdate = function(tiltLR){
@@ -117,28 +118,33 @@ function update() {
         // Conditions are testing if the angle has been saved already to a variable
         if(a === null) {
             a = tiltLR;
-        // If a variable has already an assigned value, tests if it has angled saved b variable also
+            // If a variable has already an assigned value, tests if it has angle saved to b variable also
         }else {
             if(b === null){
                 b = tiltLR;
-            // if both a and b variable have assigned values
+                // if both a and b variable have assigned values
             }else{
                 // we calculate the distance between the two angles
-                distance = b - a;
-
-                // and reset a value to the newest angle (b), and assign a new angle to b variable
-                a = b;
+                if (a != b){
+                    distance = (b - a)/2;
+                }
+                // and assign the new angle to b variable
                 b = tiltLR;
             }
         }
 
         // then using the distance calculated above, we tween to the specific position with the joints
-        game.add.tween(joint.body).to( { y: joint.body.y+distance }, 4000, "Linear", true);
-        line.setTo(body.x, body.y, joint.x, joint.y);
+        game.add.tween(joint.body).to( { y: 100+distance }, 2000, "Linear", true);
 
-        game.add.tween(joint2.body).to( { y: joint2.body.y-distance }, 4000, "Linear", true);
-        line2.setTo(body2.x, body2.y, joint2.x, joint2.y)
+        game.add.tween(joint2.body).to( { y: 100-distance }, 2000, "Linear", true);
     };
+}
+
+function update() {
+
+    line.setTo(body.x, body.y, joint.x, joint.y);
+    line2.setTo(body2.x, body2.y, joint2.x, joint2.y)
+
 }
 
 function preRender() {
