@@ -6,6 +6,8 @@ var game = new Phaser.Game('100', '100', Phaser.CANVAS, 'phaser-game', {
     preRender: preRender,
     render: render });
 
+var neck;
+var head;
 var body;
 var body2;
 var body3;
@@ -21,7 +23,11 @@ var body12;
 
 var line;
 var line2;
+var line3;
+
+var neckLine;
 var shoulderLine;
+var shoulderLine2;
 var leftArmLine;
 var rightArmLine;
 var leftArmLine2;
@@ -36,9 +42,14 @@ var rightLegLine2;
 
 var joint;
 var joint2;
+var joint3;
+
+var neckSpring;
 var mouseSpring;
 var mouseSpring2;
+var mouseSpring3;
 var shoulderSpring;
+var shoulderSpring2;
 var leftArmSpring;
 var rightArmSpring;
 var leftArmSpring2;
@@ -80,7 +91,7 @@ deviceOrientationListener = function(){
     window.addEventListener("deviceorientation", function(event) {
 
         // event.alpha is the left-to-right motion of the device, it is an angle between 180 and -180
-        var current = Math.round((event.alpha));
+        var current = Math.round(event.alpha);
 
         // "setTimeout" workaround in Phaser
         // the counter is increased by one in each 10 milliseconds
@@ -127,12 +138,14 @@ function create() {
 
     // Creating two objects that are controlled by the moving joints
     /**
+     * head
+     * neck
      * body: left shoulder joint
      * body2: right shoulder joint
      * body3: left elbow joint
      * body4: right elbow joint
      * body5: left wrist joint
-     * body5: right wrist joint
+     * body6: right wrist joint
      * body7: left hip joint
      * body8: right hip joint
      * body9: left knee joint
@@ -143,6 +156,8 @@ function create() {
      * joint: left spring anchor
      * joint2: right spring anchor
      */
+    neck = game.add.graphics(0, 0);
+    head = game.add.graphics(0, 0);
     body = game.add.graphics(0, 0);
     body2 = game.add.graphics(0, 0);
     body3 = game.add.graphics(0, 0);
@@ -158,7 +173,10 @@ function create() {
 
     joint = game.add.graphics(0, 0);
     joint2 = game.add.graphics(0, 0);
+    joint3 = game.add.graphics(0, 0);
 
+    neck.beginFill(0xFFFFFF, 0.7);
+    head.beginFill(0xFFFFFF, 0.7);
     body.beginFill(0xFFFFFF, 0.7);
     body2.beginFill(0xFFFFFF, 0.7);
     body3.beginFill(0xFFFFFF, 0.7);
@@ -174,7 +192,10 @@ function create() {
 
     joint.beginFill(0xFFFFFF, 1);
     joint2.beginFill(0xFFFFFF, 1);
+    joint3.beginFill(0xFFFFFF, 1);
 
+    neck.drawCircle(0, 0, 15);
+    head.drawCircle(0, 0, 15);
     body.drawCircle(0, 0, 15);
     body2.drawCircle(0, 0, 15);
     body3.drawCircle(0, 0, 15);
@@ -190,7 +211,10 @@ function create() {
 
     joint.drawCircle(0, 0, 15);
     joint2.drawCircle(0, 0, 15);
+    joint3.drawCircle(0, 0, 15);
 
+    neck.x  = 250; body.y  = 200;
+    head.x  = 250; body.y  = 200;
     body.x  = 250; body.y  = 200;
     body2.x = 250; body2.y = 200;
     body3.x = 250; body3.y = 200;
@@ -204,9 +228,12 @@ function create() {
     body11.x = 250; body6.y = 200;
     body12.x = 250; body6.y = 200;
 
-    joint.x = 200; joint.y = 100;
-    joint2.x = 300; joint2.y = 100;
+    joint.x = 150; joint.y = 0;
+    joint2.x = 350; joint2.y = 0;
+    joint3.x = 250; joint3.y = 0;
 
+    game.physics.p2.enable(neck, false);
+    game.physics.p2.enable(head, false);
     game.physics.p2.enable(body, false);
     game.physics.p2.enable(body2, false);
     game.physics.p2.enable(body3, false);
@@ -222,16 +249,23 @@ function create() {
 
     game.physics.p2.enable(joint, false);
     game.physics.p2.enable(joint2, false);
+    game.physics.p2.enable(joint3, false);
 
     //  Creating the joints controlled by the device angle
 
     joint.body.static = true;
     joint2.body.static = true;
+    joint3.body.static = true;
 
     // Adding springs between body and joints
     line = new Phaser.Line(body.x, body.y, joint.x, joint.y);
     line2 = new Phaser.Line(body2.x, body2.y, joint2.x, joint2.y);
-    shoulderLine = new Phaser.Line(body.x, body.y, body2.x, body2.y);
+    line3 = new Phaser.Line(head.x, head.y, joint3.x, joint3.y);
+
+    neckLine = new Phaser.Line(head.x, head.y, neck.x, neck.y);
+
+    shoulderLine = new Phaser.Line(body.x, body.y, neck.x, neck.y);
+    shoulderLine2 = new Phaser.Line(body2.x, body2.y, neck.x, neck.y);
 
     leftArmLine = new Phaser.Line(body.x, body.y, body3.x, body3.y);
     rightArmLine = new Phaser.Line(body2.x, body2.y, body4.x, body4.y);
@@ -248,9 +282,14 @@ function create() {
     rightLegLine2 = new Phaser.Line(body10.x, body10.y, body12.x, body12.y);
 
     ////////
-    mouseSpring = game.physics.p2.createSpring(joint, body, 20, 10, 1);
-    mouseSpring2 = game.physics.p2.createSpring(joint2, body2, 20, 10, 1);
-    shoulderSpring = game.physics.p2.createSpring(body, body2, 100, 5, 2);
+    mouseSpring = game.physics.p2.createSpring(joint, body, 200, 10, 1);
+    mouseSpring2 = game.physics.p2.createSpring(joint2, body2, 200, 10, 1);
+    mouseSpring3 = game.physics.p2.createSpring(joint3, head, 180, 10, 1);
+
+    shoulderSpring = game.physics.p2.createSpring(body, neck, 20, 5, 2);
+    shoulderSpring2 = game.physics.p2.createSpring(body2, neck, 20, 5, 2);
+
+    neckSpring = game.physics.p2.createSpring(head, neck, 5, 5, 2);
 
     leftArmSpring = game.physics.p2.createSpring(body, body3, 60, 5, 2);
     rightArmSpring = game.physics.p2.createSpring(body2, body4, 60, 5, 2);
@@ -269,7 +308,11 @@ function create() {
     ////////
     line.setTo(body.x, body.y, joint.x, joint.y);
     line2.setTo(body2.x, body2.y, joint2.x, joint2.y);
-    shoulderLine.setTo(body.x, body.y, body2.x, body2.y);
+    line3.setTo(head.x, head.y, joint3.x, joint3.y);
+
+    neckLine.setTo(head.x, head.y, neck.x, neck.y);
+    shoulderLine.setTo(body.x, body.y, neck.x, neck.y);
+    shoulderLine2.setTo(body2.x, body2.y, neck.x, neck.y);
 
     leftArmLine.setTo(body.x, body.y, body3.x, body3.y);
     rightArmLine.setTo(body2.x, body2.y, body4.x, body4.y);
@@ -292,6 +335,7 @@ function create() {
     // called in preload function, after a message from the server has been received, accepts data sent from server
     onUpdate = function(tiltLR){
 
+        var nullDistace = 0;
         var distance = 0;
 
         // Conditions are testing if the angle has been saved already to a variable
@@ -301,11 +345,37 @@ function create() {
         }else {
             if(b === null){
                 b = tiltLR;
+
+                if (a != b){
+                    if((360-a+b) >= 360){
+                        nullDistace = b - a;
+                    } else {
+                        nullDistace = 360 - a + b;
+                    }
+                }
+                if (nullDistace > 180) {
+
+                    distance = nullDistace - 360;
+
+                } else {
+                    distance = nullDistace;
+                }
                 // if both a and b variable have assigned values
             }else{
                 // we calculate the distance between the two angles
                 if (a != b){
-                    distance = (b - a)/2;
+                    if((360-a+b) >= 360){
+                        nullDistace = b - a;
+                    } else {
+                        nullDistace = 360 - a + b;
+                    }
+                }
+                if (nullDistace > 180) {
+
+                    distance = nullDistace - 360;
+
+                } else {
+                    distance = nullDistace;
                 }
                 // and assign the new angle to b variable
                 b = tiltLR;
@@ -314,23 +384,27 @@ function create() {
 
         // then using the distance calculated above, we tween to the specific position with the joints
 
+        console.log('degree:' + tiltLR + ', distance: ' +distance);
 
         if(joint.body.y > joint2.body.y){
-            game.add.tween(joint.body).to( { y: 100+distance, x: joint.body.x-70 }, 2000, "Linear", true);
-            game.add.tween(joint2.body).to( { y: 100-distance, x: joint2.body.x-70 }, 2000, "Linear", true);
+            game.add.tween(joint.body).to( { y: distance, x: joint.body.x-70 }, 2000, "Linear", true);
+            game.add.tween(joint2.body).to( { y: 0-distance, x: joint2.body.x-70 }, 2000, "Linear", true);
+            game.add.tween(joint3.body).to( { x: joint3.body.x-70 }, 2000, "Linear", true);
 
             cityline1.body.velocity.x=70;
             cityline2.body.velocity.x=30;
             cityline3.body.velocity.x=10;
         } else if (joint.body.y < joint2.body.y) {
-            game.add.tween(joint.body).to( { y: 100+distance, x: joint.body.x+70 }, 2000, "Linear", true);
-            game.add.tween(joint2.body).to( { y: 100-distance, x: joint2.body.x+70 }, 2000, "Linear", true);
+            game.add.tween(joint.body).to( { y: distance, x: joint.body.x+70 }, 2000, "Linear", true);
+            game.add.tween(joint2.body).to( { y: 0-distance, x: joint2.body.x+70 }, 2000, "Linear", true);
+            game.add.tween(joint3.body).to( { x: joint3.body.x+70 }, 2000, "Linear", true);
+
             cityline1.body.velocity.x=-70;
             cityline2.body.velocity.x=-30;
             cityline3.body.velocity.x=-10;
         } else {
-            game.add.tween(joint.body).to( { y: 100+distance }, 2000, "Linear", true);
-            game.add.tween(joint2.body).to( { y: 100-distance }, 2000, "Linear", true);
+            game.add.tween(joint.body).to( { y: distance }, 2000, "Linear", true);
+            game.add.tween(joint2.body).to( { y: 0-distance }, 2000, "Linear", true);
         }
     };
 }
@@ -339,7 +413,10 @@ function update() {
 
     line.setTo(body.x, body.y, joint.x, joint.y);
     line2.setTo(body2.x, body2.y, joint2.x, joint2.y);
-    shoulderLine.setTo(body.x, body.y, body2.x, body2.y);
+    line3.setTo(head.x, head.y, joint3.x, joint3.y);
+    neckLine.setTo(neck.x, neck.y, head.x, head.y);
+    shoulderLine.setTo(body.x, body.y, neck.x, neck.y);
+    shoulderLine2.setTo(body2.x, body2.y, neck.x, neck.y);
     leftArmLine.setTo(body.x, body.y, body3.x, body3.y);
     rightArmLine.setTo(body2.x, body2.y, body4.x, body4.y);
     leftArmLine2.setTo(body3.x, body3.y, body5.x, body5.y);
@@ -358,7 +435,10 @@ function preRender() {
 
     line.setTo(body.x, body.y, joint.x, joint.y);
     line2.setTo(body2.x, body2.y, joint2.x, joint2.y);
-    shoulderLine.setTo(body.x, body.y, body2.x, body2.y);
+    line3.setTo(head.x, head.y, joint3.x, joint3.y);
+    neckLine.setTo(neck.x, neck.y, head.x, head.y);
+    shoulderLine.setTo(body.x, body.y, neck.x, neck.y);
+    shoulderLine2.setTo(body2.x, body2.y, neck.x, neck.y);
     leftArmLine.setTo(body.x, body.y, body3.x, body3.y);
     rightArmLine.setTo(body2.x, body2.y, body4.x, body4.y);
     leftArmLine2.setTo(body3.x, body3.y, body5.x, body5.y);
@@ -377,7 +457,10 @@ function render() {
 
     game.debug.geom(line, lineColor);
     game.debug.geom(line2, lineColor);
+    game.debug.geom(line3, lineColor);
+    game.debug.geom(neckLine, lineColor);
     game.debug.geom(shoulderLine, lineColor);
+    game.debug.geom(shoulderLine2, lineColor);
     game.debug.geom(leftArmLine, lineColor);
     game.debug.geom(rightArmLine, lineColor);
     game.debug.geom(leftArmLine2, lineColor);
