@@ -74,6 +74,8 @@ var a = null;
 var b = null;
 var lineColor = 'rgb(255,255,255)';
 
+var text = null;
+
 // ----------------------------------------------- //
 // 1. DEFINING GAME ENVIRONMENT
     var game = new Phaser.Game('100', '100', Phaser.CANVAS, 'phaser-game', {
@@ -88,6 +90,11 @@ var lineColor = 'rgb(255,255,255)';
     var socket = io();
 
     socket.on('connect', function(){
+
+        socket.emit('authentication', {username: "John", password: "secret"});
+        socket.on('authenticated', function() {
+            // use the socket as usual
+        });
 
         // calling an eventListener on possible mobile devices
         // todo: authentication + set up different rout for mobile user for control
@@ -109,24 +116,28 @@ var lineColor = 'rgb(255,255,255)';
     // todo: make it conditional to mobile devices, solve authentication
     deviceOrientationListener = function(){
 
-        window.addEventListener("deviceorientation", function(event) {
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", function(event) {
 
-            // event.alpha is the left-to-right motion of the device, it is an angle between 180 and -180
-            var current = Math.round(event.alpha);
+                // event.alpha is the left-to-right motion of the device, it is an angle between 180 and -180
+                var current = Math.round(event.alpha);
 
-            // "setTimeout" workaround in Phaser
-            // the counter is increased by one in each 10 milliseconds
-            // when the counter reaches a number that is divisible by 40, it emits the current angle to the server
-            if(counter % 16 === 0) {
-                socket.emit('message', current);
-            }
-        }, false);
+                // "setTimeout" workaround in Phaser
+                // the counter is increased by one in each 10 milliseconds
+                // when the counter reaches a number that is divisible by 40, it emits the current angle to the server
+                if(counter % 16 === 0) {
+                    socket.emit('message', current);
+                }
+            }, false);
+        }
+
     };
 
 // ----------------------------------------------- //
 // 4. PHASER PRELOAD FUNCTION
     function preload() {
 
+        //game.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js');
         game.load.image('cityline1', '../assets/cityline1.png');
         game.load.image('cityline2', '../assets/cityline2.png');
         game.load.image('cityline3', '../assets/cityline3.png');
@@ -152,14 +163,11 @@ var lineColor = 'rgb(255,255,255)';
         timer.start();
 
         // adding and manipulating top skyline images
-        var cityline1 = game.add.tileSprite(-500, -5, 5000, 308*0.7, 'cityline1');
-        var cityline2 = game.add.tileSprite(-400, -5, 3500, 348*0.7, 'cityline2');
-        var cityline3 = game.add.tileSprite(-300, -5, 2400, 410*0.7, 'cityline3');
+        var cityline1 = game.add.tileSprite(-700, -50, 5000, 283, 'cityline1');
+        var cityline2 = game.add.tileSprite(-400, -50, 3500, 300, 'cityline2');
+        var cityline3 = game.add.tileSprite(-300, -50, 2400, 342, 'cityline3');
         cityline2.alpha = 0.7;
         cityline3.alpha = 0.4;
-        cityline1.scale.setTo(0.7,0.7);
-        cityline2.scale.setTo(0.7,0.7);
-        cityline3.scale.setTo(0.7,0.7);
 
         /**
          * PUPPET OBJECT ELEMENTS:
@@ -372,23 +380,37 @@ var lineColor = 'rgb(255,255,255)';
             }
 
             // using the distance calculated above, we tween to the specific position with the joints
-            // todo: limit skyline movement
             if(joint.body.y > joint2.body.y){
                 game.add.tween(joint.body).to( { y: distance, x: joint.body.x-Math.abs(distance) }, 1000, "Linear", true);
                 game.add.tween(joint2.body).to( { y: 0-distance, x: joint2.body.x-Math.abs(distance) }, 1000, "Linear", true);
                 game.add.tween(joint3.body).to( { x: joint3.body.x-Math.abs(distance) }, 1000, "Linear", true);
 
-                cityline1.body.velocity.x=70;
-                cityline2.body.velocity.x=30;
-                cityline3.body.velocity.x=10;
+
+                if(joint2.body.x <= 0){
+                    cityline1.body.velocity.x=0;
+                    cityline2.body.velocity.x=0;
+                    cityline3.body.velocity.x=0;
+                } else {
+                    cityline1.body.velocity.x=Math.abs(distance)/2;
+                    cityline2.body.velocity.x=Math.abs(distance)/4;
+                    cityline3.body.velocity.x=Math.abs(distance)/7;
+                }
+
             } else if (joint.body.y < joint2.body.y) {
                 game.add.tween(joint.body).to( { y: distance, x: joint.body.x+Math.abs(distance) }, 1000, "Linear", true);
                 game.add.tween(joint2.body).to( { y: 0-distance, x: joint2.body.x+Math.abs(distance) }, 1000, "Linear", true);
                 game.add.tween(joint3.body).to( { x: joint3.body.x+Math.abs(distance) }, 1000, "Linear", true);
 
-                cityline1.body.velocity.x=-70;
-                cityline2.body.velocity.x=-30;
-                cityline3.body.velocity.x=-10;
+                if(joint.body.x >= game.width){
+                    cityline1.body.velocity.x=0;
+                    cityline2.body.velocity.x=0;
+                    cityline3.body.velocity.x=0;
+                } else {
+                    cityline1.body.velocity.x=-Math.abs(distance)/2;
+                    cityline2.body.velocity.x=-Math.abs(distance)/4;
+                    cityline3.body.velocity.x=-Math.abs(distance)/7;
+                }
+
             } else {
                 game.add.tween(joint.body).to( { y: distance }, 1000, "Linear", true);
                 game.add.tween(joint2.body).to( { y: 0-distance }, 1000, "Linear", true);
@@ -423,7 +445,7 @@ var lineColor = 'rgb(255,255,255)';
 // ----------------------------------------------- //
 // 7. PHASER RENDER FUNCTION
     function render() {
-        
+
         game.debug.geom(line, lineColor);
         game.debug.geom(line2, lineColor);
         game.debug.geom(line3, lineColor);
@@ -450,3 +472,4 @@ var lineColor = 'rgb(255,255,255)';
 
         counter++;
     }
+
