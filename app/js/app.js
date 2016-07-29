@@ -1,14 +1,14 @@
+
 /**
  * Blocks:
  * 1. DEFINING GAME ENVIRONMENT
  * 2. SOCKET CONNECTION
- * 3. MOBILE DEVICE EVENT LISTENER
- * 4. PHASER PRELOAD FUNCTION
- * 5. PHASER CREATE FUNCTION
- * 6. PHASER UPDATE FUNCTION
- * 7. PHASER RENDER FUNCTION
- * 8. UPDATE COUNTER FUNCTION
+ * 3. PHASER PRELOAD FUNCTION
+ * 4. PHASER CREATE FUNCTION
+ * 5. PHASER UPDATE FUNCTION
+ * 6. PHASER RENDER FUNCTION
  */
+
 
 var bodyGroup;
 var jointGroup;
@@ -69,12 +69,22 @@ var leftLegSpring2;
 var rightLegSpring;
 var rightLegSpring2;
 
-var counter = 0;
 var a = null;
 var b = null;
 var lineColor = 'rgb(255,255,255)';
 
 var text = null;
+
+var navbar;
+
+var mobileHasOpened = false;
+
+if(mobileHasOpened === false){
+    var div = document.getElementById('game-instructions');
+
+    div.innerHTML = div.innerHTML + 'In order to start the game<br/>please visit the following website on your mobile device:<br/><span id="game-instructions-link">stringed.juliahentz.com/mobile/</span>';
+}
+
 
 // ----------------------------------------------- //
 // 1. DEFINING GAME ENVIRONMENT
@@ -91,18 +101,16 @@ var text = null;
 
     socket.on('connect', function(){
 
-        socket.emit('authentication', {username: "John", password: "secret"});
-        socket.on('authenticated', function() {
-            // use the socket as usual
-        });
-
-        // calling an eventListener on possible mobile devices
-        // todo: authentication + set up different rout for mobile user for control
-        deviceOrientationListener();
+        // todo: authentication
 
         // listening to message coming from server
         // the original message has been sent from deviceOrientationListener function
         socket.on('message', function(data){
+
+            mobileHasOpened = true;
+            var div = document.getElementById('game-instructions');
+
+            div.innerHTML = null;
 
             // calling a function within Phaser's create function
             // passing in the angle received from the mobile devie
@@ -111,33 +119,9 @@ var text = null;
     });
 
 // ----------------------------------------------- //
-// 3. MOBILE DEVICE EVENT LISTENER
-    // Function is listening for device orientation changes
-    // todo: make it conditional to mobile devices, solve authentication
-    deviceOrientationListener = function(){
-
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", function(event) {
-
-                // event.alpha is the left-to-right motion of the device, it is an angle between 180 and -180
-                var current = Math.round(event.alpha);
-
-                // "setTimeout" workaround in Phaser
-                // the counter is increased by one in each 10 milliseconds
-                // when the counter reaches a number that is divisible by 40, it emits the current angle to the server
-                if(counter % 16 === 0) {
-                    socket.emit('message', current);
-                }
-            }, false);
-        }
-
-    };
-
-// ----------------------------------------------- //
-// 4. PHASER PRELOAD FUNCTION
+// 3. PHASER PRELOAD FUNCTION
     function preload() {
 
-        //game.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js');
         game.load.image('cityline1', '../assets/cityline1.png');
         game.load.image('cityline2', '../assets/cityline2.png');
         game.load.image('cityline3', '../assets/cityline3.png');
@@ -145,30 +129,27 @@ var text = null;
     }
 
 // ----------------------------------------------- //
-// 5. PHASER CREATE FUNCTION
+// 4. PHASER CREATE FUNCTION
     function create() {
 
-        game.stage.backgroundColor = '#000';
+        game.stage.backgroundColor = '#000000';
 
         // Game physics (P2JS)
         game.physics.startSystem(Phaser.Physics.P2JS);
         game.physics.p2.gravity.y = 150;
         game.physics.p2.restitution = 0.3; // bounce effect
 
-        // creating TimerEvent, that sets off in each millisecond
-        // counter is responsible for emitting messages in deviceOrientationListener function
-        // sets a pace close to current frame-rate
-        timer = game.time.create(false);
-        timer.loop(1, updateCounter, this);
-        timer.start();
-
         // adding and manipulating top skyline images
-        var cityline1 = game.add.tileSprite(-700, -50, 5000, 283, 'cityline1');
-        var cityline2 = game.add.tileSprite(-400, -50, 3500, 300, 'cityline2');
-        var cityline3 = game.add.tileSprite(-300, -50, 2400, 342, 'cityline3');
+        var cityline3 = game.add.tileSprite(-300, 0, 2400, 300, 'cityline3');
+        var cityline2 = game.add.tileSprite(-400, 0, 3500, 250, 'cityline2');
+        var cityline1 = game.add.tileSprite(-700, 0, 5000, 200, 'cityline1');
         cityline2.alpha = 0.7;
         cityline3.alpha = 0.4;
 
+        /*var style = { font: "24px Arial, Helvetica, sans-serif", fill: "#fff", align: "center", boundsAlignH: "center", boundsAlignV: "middle" };
+
+        text = game.add.text(game.width/3*1.5, game.height/3*2, "Please visit on your mobile:\nstringed.juliahentz.com/mobile/", style);
+*/
         /**
          * PUPPET OBJECT ELEMENTS:
          * head
@@ -224,7 +205,7 @@ var text = null;
         bodyGroup.add(body12);
 
         bodyGroup.forEach(function(item) {
-            item.beginFill(0xFFFFFF, 0.7);
+            item.beginFill(0xFFFFFF, 1);
             item.drawCircle(0, 0, 15);
             item.x = 250;
             item.y = 200;
@@ -242,16 +223,16 @@ var text = null;
         jointGroup.add(joint3);
 
 
-        joint.x = 150; joint.y = 0;
-        joint2.x = 350; joint2.y = 0;
-        joint3.x = 250; joint3.y = 0;
+        joint.x = 150; joint.y = -50;
+        joint2.x = 350; joint2.y = -50;
+        joint3.x = 250; joint3.y = -50;
 
         jointGroup.forEach(function(item){
             item.beginFill(0xFFFFFF, 1);
-            item.drawCircle(0, 0, 15);
+            item.drawCircle(0, 0, 1);
             game.physics.p2.enable(item, false);
             item.body.static = true;
-        });
+        }, this);
 
         // Adding lines/springs between body and joints
         line = new Phaser.Line(body.x, body.y, joint.x, joint.y);
@@ -278,9 +259,9 @@ var text = null;
         rightLegLine2 = new Phaser.Line(body10.x, body10.y, body12.x, body12.y);
 
         ////////
-        mouseSpring = game.physics.p2.createSpring(joint, body, 200, 10, 1);
-        mouseSpring2 = game.physics.p2.createSpring(joint2, body2, 200, 10, 1);
-        mouseSpring3 = game.physics.p2.createSpring(joint3, head, 180, 10, 1);
+        mouseSpring = game.physics.p2.createSpring(joint, body, 250, 10, 1);
+        mouseSpring2 = game.physics.p2.createSpring(joint2, body2, 250, 10, 1);
+        mouseSpring3 = game.physics.p2.createSpring(joint3, head, 230, 10, 1);
 
         shoulderSpring = game.physics.p2.createSpring(body, neck, 20, 5, 2);
         shoulderSpring2 = game.physics.p2.createSpring(body2, neck, 20, 5, 2);
@@ -416,10 +397,11 @@ var text = null;
                 game.add.tween(joint2.body).to( { y: 0-distance }, 1000, "Linear", true);
             }
         };
+
     }
 
 // ----------------------------------------------- //
-// 6. PHASER UPDATE FUNCTION
+// 5. PHASER UPDATE FUNCTION
     function update() {
 
         line.setTo(body.x, body.y, joint.x, joint.y);
@@ -443,7 +425,7 @@ var text = null;
     }
 
 // ----------------------------------------------- //
-// 7. PHASER RENDER FUNCTION
+// 6. PHASER RENDER FUNCTION
     function render() {
 
         game.debug.geom(line, lineColor);
@@ -466,10 +448,4 @@ var text = null;
 
     }
 
-// ----------------------------------------------- //
-// 8. UPDATE COUNTER FUNCTION
-    function updateCounter() {
-
-        counter++;
-    }
 

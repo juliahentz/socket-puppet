@@ -4,12 +4,57 @@ body {
     position: absolute;
 }
 
-#stringed-title-text {
+a {
+    color: #FFFFFF;
+    text-decoration: none;
+}
 
-    z-index: 1000;
+a:hover {
+    color: #888888;
+}
+
+#stringed-navbar {
+
     position: absolute;
+    width: 100%;
+    height: 46px;
+    background-color: #000000;
+}
+
+#stringed-title-text {
     margin-left: 10px;
     font-size: 22px;
+    line-height: 22px;
+    color: #ffffff;
+    float: left;
+}
 
+#juliahentz {
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    line-height: 46px;
+    margin-right: 10px;
+    color: #ffffff;
+    display: inline-block;
+    float: right;
+}
 
+#hentz {
+    font-weight: 400;
+    letter-spacing: 2px;
+}
+
+#game-instructions {
+    position: absolute;
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    text-align: center;
+    color: #ffffff;
+    font-size: 20px;
+    left: 50%;
+    top: 65%;
+}
+
+#game-instructions-link {
+    font-style: italic;
 }
