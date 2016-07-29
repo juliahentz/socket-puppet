@@ -58,7 +58,7 @@ gulp.task('html', function () {
             $('link').remove();
             $('script').remove();
 
-            $('head').append('<link rel="stylesheet" href="app.full.min.css">');
+            $('head').append('<link rel="stylesheet" href="app.full.min.css"><link href="https://fonts.googleapis.com/css?family=Nothing+You+Could+Do" rel="stylesheet" type="text/css"><link href="https://fonts.googleapis.com/css?family=Lato:400,300" rel="stylesheet" type="text/css">');
             $('body').append('<script src="app.full.min.js"></script>');
 
         }))
